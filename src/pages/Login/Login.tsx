@@ -5,7 +5,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!username || !password) {
@@ -15,9 +15,40 @@ const Login = () => {
 
     setError(null);
 
-    console.log('username: ', username);
-    console.log('password: ', password)
-  }
+    try{
+      const response = await fetch ("http://localhost:8080/api/v1/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+        },
+        body: JSON.stringify({
+          Username: username,
+          Password: password,
+        }),
+      });
+
+      if(!response.ok){
+        throw new Error("Credenciales incorrectas");
+      }
+
+      const data = await response.json();
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("Role", data.role.name)
+
+      setUsername('');
+      setPassword('');
+
+      console.log("Respuesta del servidor:", data);
+    }catch (err){
+      setError("Error al iniciar sesión");
+      console.error(err);
+    }
+
+    //console.log('Hola')
+    //console.log('username: ', username);
+    //console.log('password: ', password);
+  };
   return (
     <form onSubmit={handleSubmit}>
       <div>
