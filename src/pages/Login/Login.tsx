@@ -1,6 +1,13 @@
 import { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import api from "../../services/api";
+
 
 const Login = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -15,33 +22,23 @@ const Login = () => {
 
     setError(null);
 
-    try{
-      const response = await fetch ("http://localhost:8080/api/v1/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-type": "application/json",
-        },
-        body: JSON.stringify({
-          Username: username,
-          Password: password,
-        }),
+    try {
+      const response = await api.post("/auth/login", {
+        Username: username,
+        Password: password,
       });
 
-      if(!response.ok){
-        throw new Error("Credenciales incorrectas");
-      }
+      const data = response.data;
 
-      const data = await response.json();
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("Role", data.role.name)
+      login(data.token, data.role.name);
+      navigate("/dashboard");
 
       setUsername('');
       setPassword('');
 
-      console.log("Respuesta del servidor:", data);
-    }catch (err){
-      setError("Error al iniciar sesión");
+      console.log("Login exitoso:", data);
+    } catch (err) {
+      setError("Usuario o contraseña incorrectos");
       console.error(err);
     }
 
